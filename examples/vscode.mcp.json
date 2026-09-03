@@ -1,0 +1,1 @@
+{"servers":{"facturx":{"type":"http","url":"https://facturx.orvel.dev/mcp","headers":{"Authorization":"Bearer YOUR_KEY"}}}}

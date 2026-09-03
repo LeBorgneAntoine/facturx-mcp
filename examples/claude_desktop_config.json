@@ -1,0 +1,1 @@
+{"mcpServers":{"facturx":{"command":"npx","args":["-y","mcp-remote","https://facturx.orvel.dev/mcp","--header","Authorization: Bearer ${FACTURX_KEY}"],"env":{"FACTURX_KEY":"YOUR_KEY"}}}}
