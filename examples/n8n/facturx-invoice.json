@@ -1,0 +1,249 @@
+{
+  "name": "Generate validated Factur-X invoice PDFs with the Orvel API",
+  "active": false,
+  "nodes": [
+    {
+      "id": "start-manually",
+      "name": "Start manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "edit-sample-invoice",
+      "name": "Edit sample invoice",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        120
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"invoice\": {\n    \"number\": \"F-2026-0042\",\n    \"issue_date\": \"2026-09-01\",\n    \"due_date\": \"2026-10-01\",\n    \"seller\": {\n      \"name\": \"Atelier Numérique SAS\",\n      \"siren\": \"732829320\",\n      \"vat_id\": \"FR40732829320\",\n      \"legal_info\": \"SAS au capital de 10 000 € - RCS Paris 732 829 320\",\n      \"address\": {\n        \"line1\": \"12 rue de la Paix\",\n        \"postal_code\": \"75002\",\n        \"city\": \"Paris\",\n        \"country\": \"FR\"\n      }\n    },\n    \"buyer\": {\n      \"name\": \"Boulangerie Dupont SARL\",\n      \"siren\": \"552081317\",\n      \"vat_id\": \"FR09552081317\",\n      \"address\": {\n        \"line1\": \"8 avenue des Champs\",\n        \"postal_code\": \"69002\",\n        \"city\": \"Lyon\",\n        \"country\": \"FR\"\n      }\n    },\n    \"payment\": {\n      \"means_code\": \"30\",\n      \"iban\": \"FR7630006000011234567890189\",\n      \"terms\": \"Paiement à 30 jours.\"\n    },\n    \"lines\": [\n      {\n        \"item_name\": \"Développement site web\",\n        \"quantity\": \"1\",\n        \"unit_price\": \"2500.00\",\n        \"vat_rate\": \"20\"\n      },\n      {\n        \"item_name\": \"Hébergement annuel\",\n        \"quantity\": \"12\",\n        \"unit_code\": \"MON\",\n        \"unit_price\": \"15.00\",\n        \"vat_rate\": \"20\"\n      }\n    ]\n  }\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "generate-invoice-once",
+      "name": "Generate invoice once",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://facturx.orvel.dev/v1/invoices/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { invoice: $json.invoice, options: { profile: \"en16931\", output: \"facturx-pdf\", language: \"fr\", check: \"fr-ctc\" } } }}",
+        "options": {
+          "timeout": 60000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "retryOnFail": false,
+      "onError": "stopWorkflow"
+    },
+    {
+      "id": "require-complete-validation",
+      "name": "Require complete validation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        120
+      ],
+      "parameters": {
+        "jsCode": "// Runs in n8n's Code node, once for all input items.\nconst results = $input.all();\nreturn results.map((item, index) => {\n  const response = item.json;\n  if (response.statusCode !== 200) {\n    throw new Error(`Factur-X returned HTTP ${response.statusCode ?? 'unknown'}. Check access, quota or input. No automatic retry was made.`);\n  }\n  const result = response.body;\n  if (!result || result.output !== 'facturx-pdf' || result.profile !== 'en16931' ||\n      result.media_type !== 'application/pdf' || typeof result.content_base64 !== 'string') {\n    throw new Error('Unexpected Factur-X response; no PDF released.');\n  }\n  const check = result.validation;\n  const required = ['xsd', 'schematron:base', 'schematron:fr-ctc'];\n  if (!check || check.valid !== true || check.error_count !== 0 ||\n      !Array.isArray(check.checks_skipped) || check.checks_skipped.length ||\n      !Array.isArray(check.checks_run) || !required.every(name => check.checks_run.includes(name))) {\n    throw new Error('Invoice validation failed or required checks were missing/skipped; no PDF released.');\n  }\n  const pdf = Buffer.from(result.content_base64, 'base64');\n  if (pdf.toString('base64') !== result.content_base64 || pdf.subarray(0, 5).toString('ascii') !== '%PDF-') {\n    throw new Error('Invalid PDF payload; no PDF released.');\n  }\n  const { content_base64, ...report } = result;\n  return { json: { content_base64, report }, pairedItem: { item: index } };\n});\n",
+        "mode": "runOnceForAllItems"
+      }
+    },
+    {
+      "id": "output-invoice-pdf",
+      "name": "Output invoice PDF",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        20
+      ],
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "content_base64",
+        "binaryPropertyName": "data",
+        "options": {
+          "fileName": "invoice.pdf",
+          "mimeType": "application/pdf"
+        }
+      }
+    },
+    {
+      "id": "output-validation-report",
+      "name": "Output validation report",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        240
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.report }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "about-this-workflow",
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -140
+      ],
+      "parameters": {
+        "content": "# Generate validated Factur-X invoice PDFs with the Orvel API\n\nFor automation builders who already have structured invoice data and need a Factur-X PDF plus machine-readable validation findings.\n\n## How it works\n\nRun manually with the included synthetic invoice. The workflow makes one request to Factur-X by Orvel, checks that XSD, EN 16931 base and French fr-ctc validation completed without errors, then outputs a downloadable PDF and a JSON report. Warnings remain in the report for review. Failed or incomplete checks stop downstream output.\n\n## Setup\n\n1. Import the workflow into n8n.\n2. Obtain an API key through [Factur-X by Orvel](https://facturx.orvel.dev/docs/pricing/). The template is free; customer-document API usage requires account access and consumes quota. Check current pricing before running.\n3. In **Generate invoice once**, select a Header Auth credential: name `Authorization`, value `Bearer YOUR_API_KEY`.\n4. Execute the sample. Download the Binary output from **Output invoice PDF** and inspect **Output validation report**.\n\n## Customize\n\nReplace **Edit sample invoice** with structured data from your system, keeping the `invoice` object. Preserve the validation gate before connecting storage or delivery. No community nodes are required.\n\nAutomatic retries are disabled to avoid repeat usage after uncertain responses. n8n processes invoice data; review your instance's execution retention. This workflow prepares files; it does not transmit invoices to a Plateforme Agréée or Peppol, or independently certify PDF/A.\n",
+        "height": 760,
+        "width": 500,
+        "color": 1
+      }
+    },
+    {
+      "id": "set-up-once",
+      "name": "Set up once",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -220
+      ],
+      "parameters": {
+        "content": "## 1. Set up and edit\nUse synthetic input first. Select a Header Auth credential in **Generate invoice once**: name `Authorization`, value `Bearer YOUR_API_KEY`. Never paste a key into this workflow JSON. Replace sample details before processing a real invoice.",
+        "height": 240,
+        "width": 460,
+        "color": 7
+      }
+    },
+    {
+      "id": "metered-request",
+      "name": "Metered request",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        -220
+      ],
+      "parameters": {
+        "content": "## 2. Generate and check\nOne API request per input item. Automatic retries and redirects are off. After a timeout, check account usage before rerunning. Required XML checks: XSD, EN 16931 base and French fr-ctc. A warning can remain; inspect the report.",
+        "height": 240,
+        "width": 430,
+        "color": 7
+      }
+    },
+    {
+      "id": "use-the-outputs",
+      "name": "Use the outputs",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        850,
+        -220
+      ],
+      "parameters": {
+        "content": "## 3. Download or connect\nPDF: open **Output invoice PDF**, then Binary → Download. Report: inspect **Output validation report**. Connect downstream storage/delivery only after the validation gate. This prepares a file; it does not transmit to a Plateforme Agréée or Peppol, or independently certify PDF/A.",
+        "height": 240,
+        "width": 440,
+        "color": 7
+      }
+    }
+  ],
+  "connections": {
+    "Start manually": {
+      "main": [
+        [
+          {
+            "node": "Edit sample invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit sample invoice": {
+      "main": [
+        [
+          {
+            "node": "Generate invoice once",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate invoice once": {
+      "main": [
+        [
+          {
+            "node": "Require complete validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Require complete validation": {
+      "main": [
+        [
+          {
+            "node": "Output invoice PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Output validation report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false,
+    "executionTimeout": 120
+  },
+  "pinData": {}
+}
