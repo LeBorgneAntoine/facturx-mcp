@@ -5,107 +5,90 @@
 <h1 align="center">Factur-X MCP server</h1>
 
 <p align="center">
-  Generate, validate and read <b>Factur-X / EN 16931</b> e-invoices (France, EU) from any MCP client.<br>
-  Remote server, no install. PDF/A-3 · CII · UBL 2.1 · French <code>fr-ctc</code> rules.
+  Generate, validate and read <b>Factur-X / EN 16931</b> e-invoices over MCP or REST.<br>
+  Hosted by Orvel. Factur-X PDF/A-3 · CII · UBL 2.1 · French <code>fr-ctc</code> rules.
 </p>
 
 <p align="center">
-  <a href="https://facturx.orvel.dev/docs/">Docs</a> ·
-  <a href="https://facturx.orvel.dev/docs/mcp/">MCP guide</a> ·
-  <a href="https://facturx.orvel.dev/docs/pricing/">Pricing (free key, no card)</a> ·
-  <a href="https://facturx.orvel.dev/docs/conformity/">Conformity report</a> ·
+  <a href="https://facturx.orvel.dev/docs/mcp/">Demo and MCP setup</a> ·
+  <a href="https://facturx.orvel.dev/docs/pricing/">Evaluation and plans</a> ·
+  <a href="https://facturx.orvel.dev/docs/conformity/">Conformity reports</a> ·
   <a href="https://leborgneantoine.github.io/orvel-status/">Status</a>
 </p>
 
----
+**Endpoint:** `https://facturx.orvel.dev/mcp` (Streamable HTTP)  
+**Registry identifier:** `io.github.LeBorgneAntoine/facturx`
 
-**Endpoint:** `https://facturx.orvel.dev/mcp` (Streamable HTTP, stateless)
-**Registry:** [`io.github.LeBorgneAntoine/facturx`](https://registry.modelcontextprotocol.io/v0/servers?search=facturx) on the official MCP registry
+For developers integrating invoice generation, validation or extraction into an ERP, SaaS or agent workflow. The service produces and checks files; it is not a Plateforme Agréée or a Peppol access point and does not deliver invoices to recipients.
 
-France makes electronic invoicing mandatory for all VAT-registered businesses (receiving from September 2026, issuing 2026–2027). Factur-X is the hybrid PDF + XML format of that reform. This server lets an AI agent in Claude, Cursor, VS Code, ChatGPT or your own app produce, check and read compliant invoices without writing an integration.
+## Try before paying
 
-## Tools
+Fixed synthetic samples and helper tools work without an API key. Try the [valid sample report](https://facturx.orvel.dev/v1/demo?sample=valid) and [invalid sample report](https://facturx.orvel.dev/v1/demo?sample=invalid), or connect an MCP client and ask:
 
-| Tool | What it does |
-| --- | --- |
-| `generate_invoice` | Invoice JSON → Factur-X PDF/A-3, CII XML or UBL XML. Profiles MINIMUM → EXTENDED, EN 16931, FR/EN rendering |
-| `embed_xml` | Attach a Factur-X XML to your own PDF and produce a valid PDF/A-3 |
-| `validate_invoice` | XSD + EN 16931 schematron (+ French `fr-ctc`), structured findings with rule ids |
-| `extract_invoice` | Read a PDF or XML e-invoice: parties, totals, VAT breakdown, lines |
+> Show the invalid invoice demo and explain its findings. Do not upload or process my documents.
 
-Resources: `facturx://schema/invoice` (JSON Schema of the invoice object) and `facturx://guide/french-reform`.
+The demo accepts only its bundled samples. It is not free processing of your own invoices.
 
-All tools are `readOnlyHint` / `idempotentHint`. Nothing is stored server-side. `initialize`, `tools/list` and `resources/*` work without a key so you can inspect the server before choosing a plan.
+**Your own documents require a paid key:** EUR 3 for 25 operations over 30 days, with no subscription, or monthly plans from EUR 29. Check the [current pricing and terms](https://facturx.orvel.dev/docs/pricing/) before purchase. New free keys are not offered; existing legacy access follows its existing quota.
 
 ## Connect
 
-Get a key at [facturx.orvel.dev/docs/pricing](https://facturx.orvel.dev/docs/pricing/) (Free plan: 50 documents/month, no card) and send it as `Authorization: Bearer <key>`.
-
-**Cursor** (`.cursor/mcp.json`)
+For Cursor, a no-key connection in `.cursor/mcp.json` can inspect the service and run the fixed demo:
 
 ```json
 {
   "mcpServers": {
     "facturx": {
-      "url": "https://facturx.orvel.dev/mcp",
-      "headers": { "Authorization": "Bearer YOUR_KEY" }
+      "url": "https://facturx.orvel.dev/mcp"
     }
   }
 }
 ```
 
-**VS Code** (`.vscode/mcp.json`)
+For paid document processing, add `"headers": { "Authorization": "Bearer YOUR_KEY" }` to the server configuration using your own key. Keep credentials out of version control. The same key and quota cover REST and MCP.
 
-```json
-{
-  "servers": {
-    "facturx": {
-      "type": "http",
-      "url": "https://facturx.orvel.dev/mcp",
-      "headers": { "Authorization": "Bearer YOUR_KEY" }
-    }
-  }
-}
-```
+For OAuth setup, Claude, VS Code and other clients, use the maintained [MCP connection guide](https://facturx.orvel.dev/docs/mcp/).
 
-**Claude Code**
+## Tools
 
-```bash
-claude mcp add --transport http facturx https://facturx.orvel.dev/mcp --header "Authorization: Bearer YOUR_KEY"
-```
+| Tool | Purpose |
+| --- | --- |
+| `view_invoice_demo` | Inspect fixed synthetic valid/invalid samples without uploading a document |
+| `get_invoice_example` | Get structured invoice or credit-note examples |
+| `explain_finding` | Explain a validation rule |
+| `check_party` | Check one invoice party |
+| `check_invoice_parties` | Check seller and buyer together |
+| `generate_invoice` | Generate Factur-X PDF/A-3, CII or UBL from invoice JSON |
+| `embed_xml` | Embed CII XML into an existing PDF |
+| `validate_invoice` | Check your document and return structured findings |
+| `extract_invoice` | Extract invoice fields from PDF/XML |
+| `draft_credit_note` | Draft a full or partial credit note |
 
-**Claude Desktop** (custom connectors cannot send headers yet, so bridge with `mcp-remote`)
+Each tool describes its inputs and access requirements. Document operations consume quota; a client should not retry a completed operation blindly.
 
-```json
-{
-  "mcpServers": {
-    "facturx": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://facturx.orvel.dev/mcp", "--header", "Authorization: Bearer ${FACTURX_KEY}"],
-      "env": { "FACTURX_KEY": "YOUR_KEY" }
-    }
-  }
-}
-```
+Generation profiles: BASIC WL, EN 16931, EXTENDED and EXTENDED-CTC-FR. UBL generation supports EN 16931 and EXTENDED-CTC-FR. Reading/validation also supports other Factur-X profiles; see the [API reference](https://facturx.orvel.dev/docs/api/).
 
-More clients (Python SDK, AgenticMarket pay-per-call) in the [MCP guide](https://facturx.orvel.dev/docs/mcp/).
+## Verify the result
 
-## Example prompts
+Read `valid`, `findings`, `checks_run` and `checks_skipped` in the report. A successful HTTP response alone does not establish which checks ran, independent PDF/A certification or successful delivery to a PA.
 
-- "Generate a Factur-X invoice for this quote: seller Atelier Numérique SAS (SIREN 732829320, VAT FR40732829320, Paris), buyer Boulangerie Dupont (SIREN 552081317, Lyon), 1 × website development 2500 EUR HT at 20 %, 12 months hosting at 15 EUR, due in 30 days."
-- "Validate the attached supplier invoice against the French rules and explain each failing rule in plain words."
-- "Extract the totals and VAT breakdown from these three PDFs and give me a table."
-
-## Conformity
-
-Every published sample is validated by an independent engine (Mustangproject, the reference open-source Factur-X validator): XSD, EN 16931 schematron, French CTC rules, PDF/A-3 with the embedded `factur-x.xml`. Reports and reproduction steps: [Conformity](https://facturx.orvel.dev/docs/conformity/).
+Published sample files and independent Mustangproject validation reports are available on the [conformity page](https://facturx.orvel.dev/docs/conformity/), with scope and known warnings.
 
 ## REST API
 
-The same engine is available as a REST API (`/v1/invoices/generate`, `/v1/validate`, `/v1/extract`, OpenAPI at `/openapi.json`). One key, both interfaces, one quota. See the [API reference](https://facturx.orvel.dev/docs/api/).
+The same engine is available through:
+
+- `POST /v1/invoices/generate`
+- `POST /v1/invoices/embed`
+- `POST /v1/invoices/validate`
+- `POST /v1/invoices/extract`
+
+Generation expects `{"invoice": {...}, "options": {...}}`, not bare invoice JSON. Use `Accept: application/json` to return file content in base64 alongside totals and the validation report in one request.
+
+[OpenAPI](https://facturx.orvel.dev/openapi.json) · [REST reference](https://facturx.orvel.dev/docs/api/)
 
 ## About
 
-Built and operated by [Orvel](https://facturx.orvel.dev/docs/) (Antoine Le Borgne, France). Hosted in the EU (Railway, Amsterdam). Support: <support@orvel.dev>.
+Built and operated by [Orvel](https://orvel.dev/). [Privacy](https://facturx.orvel.dev/docs/legal/privacy/) · [Terms](https://facturx.orvel.dev/docs/legal/terms/) · Support: <support@orvel.dev>.
 
-This repository holds the public manifest (`server.json`), brand assets and client examples of the hosted server. The engine itself is closed source.
+This repository holds the public manifest, brand assets and connection examples of the hosted service. The engine itself is closed source.
