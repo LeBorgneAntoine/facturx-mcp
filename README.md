@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/facturx-icon-256.png" width="128" alt="Factur-X by Orvel">
+  <img src="assets/facturx-blue-f.png" width="128" alt="Factur-X by Orvel">
 </p>
 
 <h1 align="center">Factur-X MCP server</h1>
