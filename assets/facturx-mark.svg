@@ -1,6 +1,1 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Factur-X by Orvel">
-  <!-- Factur-X mark: two ribbons weaving into one X. A Factur-X file is a PDF layer (ink) and an XML layer
-       (accent) bound in a single document. Same grammar as the Orvel mark: stroke 6, round caps. -->
-  <path d="M53 11 C14 11 50 53 11 53" fill="none" stroke="#4F6BFF" stroke-width="6" stroke-linecap="round"/>
-  <path d="M11 11 C50 11 14 53 53 53" fill="none" stroke="#0F172A" stroke-width="6" stroke-linecap="round"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="112" height="112" viewBox="0 0 112 112" role="img" aria-label="Factur-X logo"><title>Factur-X logo</title><defs><linearGradient id="f3d-export-light" x1="0" y1="0" x2=".5" y2="1"><stop stop-color="#8AB8FF"/><stop offset="1" stop-color="#5790FF"/></linearGradient><linearGradient id="f3d-export-main" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#2F68EE"/><stop offset="1" stop-color="#234CBA"/></linearGradient><clipPath id="f3d-export-overlap"><path d="M48 12H96V28A32 32 0 0 1 64 60H44V100H16V44A32 32 0 0 1 48 12Z" fill="#fff"/></clipPath></defs><path d="M48 12H96V28A32 32 0 0 1 64 60H44V100H16V44A32 32 0 0 1 48 12Z" fill="url(#f3d-export-light)"/><path d="M48 44H92V56A32 32 0 0 1 60 88H16V76A32 32 0 0 1 48 44Z" fill="url(#f3d-export-main)"/><g clip-path="url(#f3d-export-overlap)"><path d="M48 44H92V56A32 32 0 0 1 60 88H16V76A32 32 0 0 1 48 44Z" fill="#234CBA"/></g></svg>
