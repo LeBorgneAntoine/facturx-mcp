@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://facturx.orvel.dev/docs/mcp/">Demo and MCP setup</a> ·
-  <a href="https://facturx.orvel.dev/docs/pricing/">Evaluation and plans</a> ·
+  <a href="https://facturx.orvel.dev/docs/pricing/">Pricing and allowances</a> ·
   <a href="https://facturx.orvel.dev/docs/conformity/">Conformity reports</a> ·
   <a href="https://leborgneantoine.github.io/orvel-status/">Status</a>
 </p>
@@ -29,7 +29,7 @@ Fixed synthetic samples and helper tools work without an API key. Try the [valid
 
 The demo accepts only its bundled samples. It is not free processing of your own invoices.
 
-**Try your own documents:** eligible verified accounts can start a bounded trial of 10 operations over 14 days, with up to 30 processing attempts, no card and no renewal. Launch availability is limited. Start in the [Factur-X workspace](https://facturx.orvel.dev/login). Paid access remains EUR 3 for 25 operations over 30 days or monthly plans from EUR 29. Check the [current pricing and terms](https://facturx.orvel.dev/docs/pricing/) before purchase.
+**Try your own documents:** eligible verified accounts can start a bounded trial of 10 operations over 14 days, with up to 30 processing attempts, no card and no renewal. Launch availability is limited. Start in the [Factur-X workspace](https://facturx.orvel.dev/login). See the [current paid allowances, pricing and terms](https://facturx.orvel.dev/docs/pricing/) before purchase.
 
 ## Connect
 
