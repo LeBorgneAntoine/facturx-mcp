@@ -29,9 +29,11 @@ Fixed synthetic samples and helper tools work without an API key. Try the [valid
 
 The demo accepts only its bundled samples. It is not free processing of your own invoices.
 
-**Your own documents require a paid key:** EUR 3 for 25 operations over 30 days, with no subscription, or monthly plans from EUR 29. Check the [current pricing and terms](https://facturx.orvel.dev/docs/pricing/) before purchase. New free keys are not offered; existing legacy access follows its existing quota.
+**Try your own documents:** eligible verified accounts can start a bounded trial of 10 operations over 14 days, with up to 30 processing attempts, no card and no renewal. Launch availability is limited. Start in the [Factur-X workspace](https://facturx.orvel.dev/login). Paid access remains EUR 3 for 25 operations over 30 days or monthly plans from EUR 29. Check the [current pricing and terms](https://facturx.orvel.dev/docs/pricing/) before purchase.
 
 ## Connect
+
+**For your own documents with an account:** connect a compatible OAuth MCP client to `https://facturx.orvel.dev/mcp/account`, authenticate in the browser and approve access to your trial or linked plan. Existing `/mcp` integrations and public fixed samples remain available. Authenticate again when switching endpoints; tokens are endpoint-specific.
 
 For Cursor, a no-key connection in `.cursor/mcp.json` can inspect the service and run the fixed demo:
 

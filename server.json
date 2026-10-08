@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.LeBorgneAntoine/facturx",
   "title": "Factur-X: Generate & Validate E-Invoices",
-  "description": "Generate and validate Factur-X, CII & UBL invoices. Free demo; EUR 3 evaluation, no subscription.",
+  "description": "Generate and validate Factur-X, CII & UBL invoices. Free demo, bounded account trial and paid plans.",
   "version": "0.1.19",
   "websiteUrl": "https://facturx.orvel.dev/docs/mcp/",
   "icons": [
@@ -21,7 +21,7 @@
       "headers": [
         {
           "name": "Authorization",
-          "description": "Optional for sample demo and helpers. Your documents: Bearer <API key>, from EUR 3, no subscription. Setup: https://facturx.orvel.dev/docs/mcp/",
+          "description": "Optional for fixed samples. API-key access: Bearer <API key>. Account trial uses OAuth at /mcp/account. Setup: https://facturx.orvel.dev/docs/mcp/",
           "isRequired": false,
           "isSecret": true
         }
