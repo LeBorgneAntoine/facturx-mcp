@@ -87,6 +87,10 @@ Generation expects `{"invoice": {...}, "options": {...}}`, not bare invoice JSON
 
 [OpenAPI](https://facturx.orvel.dev/openapi.json) · [REST reference](https://facturx.orvel.dev/docs/api/)
 
+## n8n workflow
+
+Import the free [n8n invoice workflow](examples/n8n/README.md) to generate a PDF and check its validation report in one API request. The template uses built-in nodes and your own API credentials. API access and quota follow the [current account offers](https://facturx.orvel.dev/docs/pricing/).
+
 ## About
 
 Built and operated by [Orvel](https://orvel.dev/). [Privacy](https://facturx.orvel.dev/docs/legal/privacy/) · [Terms](https://facturx.orvel.dev/docs/legal/terms/) · Support: <support@orvel.dev>.
